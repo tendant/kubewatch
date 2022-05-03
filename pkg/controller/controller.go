@@ -761,7 +761,11 @@ func (c *Controller) processItem(newEvent Event) error {
 			Obj:        newEvent.obj,
 			OldObj:     newEvent.oldObj,
 		}
-		c.eventHandler.Handle(kbEvent)
+		if newEvent.resourceType != "Node" {
+			c.eventHandler.Handle(kbEvent)
+		} else {
+			logrus.Debugf("Ignore update events for Node: %s", kbEvent)
+		}
 		return nil
 	case "delete":
 		kbEvent := event.Event{

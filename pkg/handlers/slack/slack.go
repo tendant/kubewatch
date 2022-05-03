@@ -88,6 +88,7 @@ func (s *Slack) Handle(e event.Event) {
 	attachment := prepareSlackAttachment(e, s)
 
 	channelID, timestamp, err := api.PostMessage(s.Channel,
+		slack.MsgOptionText(e.Message(), false),
 		slack.MsgOptionAttachments(attachment),
 		slack.MsgOptionAsUser(true))
 	if err != nil {
