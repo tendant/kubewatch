@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"emperror.dev/errors"
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/bitnami-labs/kubewatch/config"
 	"github.com/bitnami-labs/kubewatch/pkg/event"
 	"github.com/bitnami-labs/kubewatch/pkg/handlers"
@@ -561,22 +560,6 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 			}
 		},
 		UpdateFunc: func(old, new interface{}) {
-			logrus.SetFormatter(&logrus.TextFormatter{
-				DisableColors: true,
-				FullTimestamp: true,
-			})
-			opts := []patch.CalculateOption{
-				patch.IgnoreStatusFields(),
-				patch.IgnorePDBSelector(),
-				patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
-			}
-			patchResult, err := patch.DefaultPatchMaker.Calculate(old.(runtime.Object), new.(runtime.Object), opts...)
-			if err != nil {
-				logrus.Warn("Failed calculate patch result:", err)
-			}
-			if !patchResult.IsEmpty() {
-				logrus.Infof("patchResult: %s", patchResult)
-			}
 			var ok bool
 			newEvent.key, err = cache.MetaNamespaceKeyFunc(old)
 			newEvent.eventType = "update"
