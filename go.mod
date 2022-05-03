@@ -3,6 +3,9 @@ module github.com/bitnami-labs/kubewatch
 go 1.14
 
 require (
+	emperror.dev/errors v0.8.1 // indirect
+	github.com/banzaicloud/k8s-objectmatcher v1.8.0 // indirect
+	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/fatih/structtag v1.2.0
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135 // indirect
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
