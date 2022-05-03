@@ -565,9 +565,6 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 				DisableColors: true,
 				FullTimestamp: true,
 			})
-			logrus.Infof("Patch old: %s", old)
-			logrus.Infof("Patch new: %s", new)
-			diffObject(old, new)
 			opts := []patch.CalculateOption{
 				patch.IgnoreStatusFields(),
 				patch.IgnorePDBSelector(),
