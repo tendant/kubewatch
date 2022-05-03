@@ -18,7 +18,7 @@ require (
 	github.com/pelletier/go-toml v1.0.1 // indirect
 	github.com/segmentio/textio v1.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/slack-go/slack v0.6.5
+	github.com/slack-go/slack v0.10.3
 	github.com/spf13/cast v1.1.0 // indirect
 	github.com/spf13/cobra v0.0.1
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
