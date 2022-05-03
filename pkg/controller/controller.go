@@ -39,7 +39,6 @@ import (
 	autoscaling_v1 "k8s.io/api/autoscaling/v1"
 	batch_v1 "k8s.io/api/batch/v1"
 	api_v1 "k8s.io/api/core/v1"
-	ext_v1beta1 "k8s.io/api/extensions/v1beta1"
 	rbac_v1beta1 "k8s.io/api/rbac/v1beta1"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -53,6 +52,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch"
 	json "github.com/json-iterator/go"
+	networking_v1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
 )
 
@@ -481,18 +481,18 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 		informer := cache.NewSharedIndexInformer(
 			&cache.ListWatch{
 				ListFunc: func(options meta_v1.ListOptions) (runtime.Object, error) {
-					return kubeClient.ExtensionsV1beta1().Ingresses(conf.Namespace).List(context.TODO(), options)
+					return kubeClient.NetworkingV1().Ingresses(conf.Namespace).List(context.TODO(), options)
 				},
 				WatchFunc: func(options meta_v1.ListOptions) (watch.Interface, error) {
-					return kubeClient.ExtensionsV1beta1().Ingresses(conf.Namespace).Watch(context.TODO(), options)
+					return kubeClient.NetworkingV1().Ingresses(conf.Namespace).Watch(context.TODO(), options)
 				},
 			},
-			&ext_v1beta1.Ingress{},
+			&networking_v1.Ingress{},
 			0, //Skip resync
 			cache.Indexers{},
 		)
 
-		c := newResourceController(kubeClient, eventHandler, informer, objName(ext_v1beta1.Ingress{}), EXT_V1BETA)
+		c := newResourceController(kubeClient, eventHandler, informer, objName(networking_v1.Ingress{}), EXT_V1BETA)
 		stopCh := make(chan struct{})
 		defer close(stopCh)
 
