@@ -25,6 +25,7 @@ import (
 	"syscall"
 	"time"
 
+	"emperror.dev/errors"
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"github.com/bitnami-labs/kubewatch/config"
 	"github.com/bitnami-labs/kubewatch/pkg/event"
@@ -49,6 +50,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+
+	jsonpatch "github.com/evanphx/json-patch"
+	json "github.com/json-iterator/go"
+	"k8s.io/apimachinery/pkg/util/jsonmergepatch"
 )
 
 const maxRetries = 5
@@ -500,6 +505,41 @@ func Start(conf *config.Config, eventHandler handlers.Handler) {
 	<-sigterm
 }
 
+func diffObject(old, new interface{}) {
+	current, err := json.ConfigCompatibleWithStandardLibrary.Marshal(old)
+	if err != nil {
+		// return nil, errors.Wrap(err, "Failed to convert current object to byte sequence")
+		logrus.Warn(errors.Wrap(err, "Failed to convert current object to byte sequence"))
+	}
+
+	modified, err := json.ConfigCompatibleWithStandardLibrary.Marshal(new)
+	if err != nil {
+		// return nil, errors.Wrap(err, "Failed to convert current object to byte sequence")
+		logrus.Warn(errors.Wrap(err, "Failed to convert current object to byte sequence"))
+	}
+
+	// current, _, err = DeleteNullInJson(current)
+	// if err != nil {
+	// 	// return nil, errors.Wrap(err, "Failed to delete null from current object")
+	// 	log.Warn(errors.Wrap(err, "Failed to delete null from current object"))
+	// }
+
+	original := current
+
+	// modified, _, err = DeleteNullInJson(modified)
+	// if err != nil {
+	// 	// return nil, errors.Wrap(err, "Failed to delete null from modified object")
+	// 	log.Warn(errors.Wrap(err, "Failed to delete null from modified object"))
+	// }
+
+	addAndChangePatch, err := jsonpatch.CreateMergePatch(current, modified)
+	logrus.Info("addAndChangePatch patch:", string(addAndChangePatch))
+
+	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(original, modified, current)
+	logrus.Info("3 way merge patch:", string(patch))
+
+}
+
 func newResourceController(client kubernetes.Interface, eventHandler handlers.Handler, informer cache.SharedIndexInformer, resourceType string, apiVersion string) *Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var newEvent Event
@@ -521,7 +561,19 @@ func newResourceController(client kubernetes.Interface, eventHandler handlers.Ha
 			}
 		},
 		UpdateFunc: func(old, new interface{}) {
-			patchResult, err := patch.DefaultPatchMaker.Calculate(old.(runtime.Object), new.(runtime.Object))
+			logrus.SetFormatter(&logrus.TextFormatter{
+				DisableColors: true,
+				FullTimestamp: true,
+			})
+			logrus.Infof("Patch old: %s", old)
+			logrus.Infof("Patch new: %s", new)
+			diffObject(old, new)
+			opts := []patch.CalculateOption{
+				patch.IgnoreStatusFields(),
+				patch.IgnorePDBSelector(),
+				patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
+			}
+			patchResult, err := patch.DefaultPatchMaker.Calculate(old.(runtime.Object), new.(runtime.Object), opts...)
 			if err != nil {
 				logrus.Warn("Failed calculate patch result:", err)
 			}
